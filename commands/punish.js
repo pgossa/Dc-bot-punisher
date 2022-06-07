@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { guildId } = require('../config.json');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
 
 
@@ -10,8 +9,6 @@ resource.volume.setVolume(0.9);
 
 const player = createAudioPlayer();
 
-const coinChannelId = '983067220747886652';
-
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('punish')
@@ -20,12 +17,11 @@ module.exports = {
 			option.setName('sinner')
 				.setDescription('Name of the sinner!')
 				.setRequired(true)),
-	async execute(interaction, client) {
+	async execute(interaction, client, punishedUsers, leCoinVoiceChannelID) {
 		const user = interaction.options.getMember('sinner');
-		const guild = client.guilds.cache.get(guildId);
-		const member = await guild.members.fetch(user);
-		const channel = client.channels.cache.get(coinChannelId);
-		member.voice.setChannel(channel, 'You are being punished');
+		punishedUsers.push(user.user.username);
+		const channel = client.channels.cache.get(leCoinVoiceChannelID);
+		user.voice.setChannel(channel, 'You are being punished');
 
 		const connection = joinVoiceChannel({
 			channelId: channel.id,
@@ -34,10 +30,7 @@ module.exports = {
 		});
 		connection.subscribe(player);
 		player.play(resource);
-
-		setTimeout(function() {
-			console.log('playing');
-		}, 50000);
-		await interaction.reply(user.user.username);
+		await interaction.reply(user.user.username + ' is being punished');
+		return punishedUsers;
 	},
 };
